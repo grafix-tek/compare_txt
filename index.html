@@ -1,179 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Text Compare Tool (Plain Text Diff)</title>
+  <meta charset="UTF-8" />
+  <title>Text Compare Tool</title>
   <style>
     :root {
-      --main-bg: #fff;
-      --main-fg: #161c2d;
-      --box-bg: #fafaff;
+      --bg: #161c2d;
+      --fg: #f4f6fa;      /* UI, headings, labels: always light */
+      --box-bg: #D3D3D3;
+      --box-fg: #222;     /* Text in textareas/diffboxes: dark in regular mode */
       --box-border: #ccc;
-      --diff-ins: #ddffdd;
-      --diff-del: #ffdddd;
-      --compare-btn-bg: linear-gradient(90deg, #1976d2 30%, #2196f3 100%);
-      --compare-btn-bg-hover: linear-gradient(90deg, #1359a0 30%, #1976d2 100%);
-      --compare-btn-fg: #fff;
-      --compare-btn-shadow: 0 4px 18px 0 rgba(60,120,240,0.07), 0 1.5px 4px 0 rgba(30,80,200,0.14);
-      --compare-btn-shadow-hover: 0 2px 12px 0 rgba(30,80,200,0.14);
-      --case-btn-bg: #f7f7f7;
-      --case-btn-fg: #222;
-      --case-btn-border: #b3b3b3;
-      --case-btn-active-bg: Highlight;
-      --case-btn-active-fg: #fff;
-      --case-btn-active-border: Highlight;
-      --diffbox-placeholder: #666;
+      --success-bg: #21b67b;
+      --success-fg: #fff;
+      --case-btn-border: #444f67;
+      --case-btn-bg: #252a3d;
+      --case-btn-bg-active: linear-gradient(90deg, #1976d2 10%, #42a5f5 90%);
+      --case-btn-fg-active: #fff;
+      --case-btn-fg: #f4f6fa;
     }
     [data-theme="dark"] {
-      --main-bg: #161c2d;
-      --main-fg: #f4f6fa;
+      --bg: #161c2d;
+      --fg: #f4f6fa;
       --box-bg: #222d44;
+      --box-fg: #f4f6fa;  /* Text in textareas/diffboxes: light in dark mode */
       --box-border: #444f67;
-      --diff-ins: #2b4030;
-      --diff-del: #402c2c;
-      --compare-btn-bg: linear-gradient(90deg, #1359a0 30%, #1976d2 100%);
-      --compare-btn-bg-hover: linear-gradient(90deg, #0c375c 30%, #1359a0 100%);
-      --compare-btn-fg: #fff;
-      --compare-btn-shadow: 0 4px 18px 0 rgba(60,120,240,0.14), 0 1.5px 4px 0 rgba(30,80,200,0.18);
-      --compare-btn-shadow-hover: 0 2px 12px 0 rgba(30,80,200,0.23);
-      --case-btn-bg: #202a3c;
-      --case-btn-fg: #eee;
-      --case-btn-border: #666;
-      --case-btn-active-bg: #1976d2;
-      --case-btn-active-fg: #fff;
-      --case-btn-active-border: #1976d2;
-      --diffbox-placeholder: #bbb;
+      --success-bg: #21b67b;
+      --success-fg: #fff;
+      --case-btn-border: #444f67;
+      --case-btn-bg: #252a3d;
+      --case-btn-bg-active: linear-gradient(90deg, #1359a0 10%, #1976d2 90%);
+      --case-btn-fg-active: #fff;
+      --case-btn-fg: #f4f6fa;
     }
     body {
+      background: var(--bg);
+      color: var(--fg);
       font-family: sans-serif;
-      padding: 20px;
-      max-width: 1200px;
-      margin: auto;
-      background: var(--main-bg);
-      color: var(--main-fg);
-      transition: background 0.22s, color 0.22s;
+      margin: 20px auto;
+      max-width: 90%;
+      transition: background 0.2s, color 0.2s;
     }
-    .container { display: flex; gap: 20px; }
-    .box { flex: 1; display: flex; flex-direction: column; }
-    .diff-row { display: flex; gap: 20px; margin-top: 15px; }
-    .diffbox {
-      border: 1px solid var(--box-border);
-      min-height: 120px;
-      padding: 10px;
-      font-family: monospace;
-      white-space: pre-wrap;
-      overflow-x: auto;
-      background: var(--box-bg);
-      color: var(--main-fg);
-      flex: 1;
-      border-radius: 5px;
-      transition: background 0.22s, color 0.22s, border-color 0.22s;
+
+    /* Make sure all UI/headings/labels use --fg (light color always) */
+    body, h1, h2, h3, h4, h5, h6, label, .toggle-label, .case-label {
+      color: var(--fg);
     }
-    del, ins {
-	  background: #1976d2 !important;
-	  color: #fff !important;
-	  text-decoration: none;
-	  border-radius: 3px;
-	  padding: 1px 2px;
-}
-    textarea {
-      height: 120px;
-      margin-bottom: 10px;
-      border: 1px solid var(--box-border);
-      background: var(--box-bg);
-      color: var(--main-fg);
-      border-radius: 5px;
-      padding: 8px;
-      font-size: 1em;
-      font-family: monospace;
-      transition: background 0.22s, color 0.22s, border-color 0.22s;
-    }
-    .label-head { font-weight: bold; }
-    .options { margin-top: 15px; margin-bottom: 5px; }
-    .case-group {
-      display: inline-block;
-      margin-left: 8px;
-      vertical-align: middle;
-    }
-    .case-btn {
-      border: 1px solid var(--case-btn-border);
-      background: var(--case-btn-bg);
-      color: var(--case-btn-fg);
-      padding: 6px 16px;
-      border-radius: 5px;
-      margin: 0 2px;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, border 0.15s;
-      font-weight: 500;
-      outline: none;
-      user-select: none;
-    }
-    .case-btn.active {
-      background: var(--case-btn-active-bg);
-      color: var(--case-btn-active-fg);
-      border: 1.5px solid var(--case-btn-active-border);
-    }
-    .checkboxes-row {
-      margin-top: 18px;
-      display: flex;
-      gap: 32px;
-      align-items: center;
-    }
-    .options label { margin-right: 20px; }
-    .btn-row {
-      margin-top:30px; margin-bottom:15px;
-      display: flex; gap: 18px; align-items: center;
-    }
-    .compare-btn {
-      padding: 16px 44px;
-      font-size: 1.3em;
-      font-weight: bold;
-      color: var(--compare-btn-fg);
-      background: var(--compare-btn-bg);
-      border: none;
-      border-radius: 9px;
-      box-shadow: var(--compare-btn-shadow);
-      cursor: pointer;
-      transition: background 0.18s, box-shadow 0.18s, transform 0.1s;
-      letter-spacing: 1px;
-    }
-    .compare-btn:hover, .compare-btn:focus {
-      background: var(--compare-btn-bg-hover);
-      box-shadow: var(--compare-btn-shadow-hover);
-      transform: translateY(-2px) scale(1.04);
-    }
-    .clear-btn {
-      padding: 16px 38px;
-      font-size: 1.05em;
-      font-weight: 500;
-      background: #bbb;
-      color: #222;
-      border-radius: 9px;
-      border: none;
-      box-shadow: none;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, transform 0.1s;
-    }
-    .clear-btn:hover, .clear-btn:focus {
-      background: #888;
-      color: #fff;
-      transform: scale(1.05);
-    }
-    .dark-toggle-row {
+
+    .toggle-row {
       display: flex;
       align-items: center;
       margin-bottom: 20px;
     }
     .toggle-label {
-      font-weight: 500;
-      margin-right: 12px;
-      letter-spacing: 0.5px;
+      margin-right: 10px;
+      font-weight: bold;
     }
     .toggle-switch {
-      width: 54px;
-      height: 28px;
       position: relative;
       display: inline-block;
+      width: 50px;
+      height: 24px;
     }
     .toggle-switch input {
       opacity: 0;
@@ -183,177 +69,330 @@
     .slider {
       position: absolute;
       cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: 0; left: 0;
+      right: 0; bottom: 0;
       background-color: #ccc;
+      transition: 0.4s;
       border-radius: 34px;
-      transition: .3s;
     }
     .slider:before {
       position: absolute;
       content: "";
-      height: 20px;
-      width: 20px;
-      left: 4px;
-      bottom: 4px;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
       background-color: white;
+      transition: 0.4s;
       border-radius: 50%;
-      transition: .3s;
-      box-shadow: 0 2px 7px #bbb2;
     }
     input:checked + .slider {
       background-color: #2196f3;
     }
     input:checked + .slider:before {
       transform: translateX(26px);
-      background: #f1f8fe;
+    }
+    .flex-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+    .box {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    /* Use --box-fg for box text, --fg for everything else */
+    textarea, .diffbox {
+      width: 100%;
+      min-height: 350px;
+      border: 1px solid var(--box-border);
+      background: var(--box-bg);
+      color: var(--box-fg);      /* THE KEY LINE! */
+      border-radius: 5px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 1em;
+      resize: vertical;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      box-sizing: border-box;
     }
     .diffbox i {
-      color: var(--diffbox-placeholder);
+      color: gray;
+    }
+    .identical-msg {
+      background: var(--success-bg);
+      color: var(--success-fg);
+      font-weight: bold;
+      padding: 10px 0;
+      display: block;
+      text-align: center;
+      border-radius: 5px;
+      font-size: 1.2em;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .controls label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: normal;
+    }
+    .case-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .case-row .case-label {
+      font-weight: bold;
+      margin-right: 3px;
+      white-space: nowrap;
+    }
+    .case-btn-group {
+      display: flex;
+      gap: 15px;
+    }
+    .case-btn {
+      padding: 10px 32px;
+      font-size: 1.15em;
+      border: 2px solid var(--case-btn-border);
+      background: var(--case-btn-bg);
+      color: var(--case-btn-fg);
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.18s, color 0.18s, border 0.18s, box-shadow 0.12s;
+      outline: none;
+    }
+    .case-btn.active {
+      background: var(--case-btn-bg-active) !important;
+      color: var(--case-btn-fg-active) !important;
+      border: 2.5px solid #1976d2;
+      box-shadow: 0 2px 12px 0 rgba(30,80,200,0.14);
+      font-weight: bold;
+    }
+    .button-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      font-weight: bold;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .compare-btn {
+      padding: 15px 36px;
+      font-size: 1.5em;
+      background: linear-gradient(90deg, #1976d2 10%, #42a5f5 90%);
+      color: white;
+      box-shadow: 0 4px 16px 0 rgba(60,120,240,0.09), 0 2px 8px 0 rgba(30,80,200,0.10);
+      border-radius: 9px;
+      border: none;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.12s;
+    }
+    .compare-btn:hover, .compare-btn:focus {
+      background: linear-gradient(90deg, #1359a0 10%, #1976d2 90%);
+      box-shadow: 0 2px 12px 0 rgba(30,80,200,0.17);
+      transform: translateY(-2px) scale(1.04);
+    }
+    .clear-btn {
+      background-color: #ccc;
+    }
+    .clear-btn:hover {
+      background-color: #999;
+      color: white;
+    }
+    ins, del {
+      background: #1976d2 !important;
+      color: #fff !important;
+      text-decoration: none;
+      border-radius: 2px;
+      padding: 1px 2px;
+    }
+    h2 {
+      margin-bottom: 12px;
+    }
+    h3 {
+      margin-top: 30px;
+      margin-bottom: 12px;
     }
   </style>
 </head>
 <body data-theme="light">
-
-<div class="dark-toggle-row">
-  <span class="toggle-label">Theme:</span>
-  <label class="toggle-switch">
-    <input type="checkbox" id="darkModeSwitch" onchange="toggleTheme()">
-    <span class="slider"></span>
-  </label>
-  <span style="margin-left:12px;" id="themeName">Light Mode</span>
-</div>
-
-<h2>Text Compare Tool</h2>
-
-<div class="container">
-  <div class="box">
-    <span class="label-head">Text 1</span>
-    <textarea id="text1"></textarea>
+  <div class="toggle-row">
+    <span class="toggle-label">Theme:</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="darkToggle" onchange="toggleTheme()" />
+      <span class="slider"></span>
+    </label>
+    <span style="margin-left:10px;" id="themeName">Regular Mode</span>
   </div>
-  <div class="box">
-    <span class="label-head">Text 2</span>
-    <textarea id="text2"></textarea>
-  </div>
-</div>
 
-<div class="options">
-  <span style="font-weight:bold;">Case normalization:</span>
-  <div class="case-group">
-    <button type="button" class="case-btn active" id="caseNone" onclick="setCase('none')">No Change</button>
-    <button type="button" class="case-btn" id="caseLower" onclick="setCase('lower')">Lowercase</button>
-    <button type="button" class="case-btn" id="caseUpper" onclick="setCase('upper')">Uppercase</button>
-  </div>
-  <input type="hidden" id="caseOption" value="none">
+  <h2>Text Compare Tool</h2>
 
-  <div class="checkboxes-row">
-    <div>
-      <input type="checkbox" id="removeLineBreaks" checked>
-      <label for="removeLineBreaks">Remove line breaks</label>
+  <div class="flex-row">
+    <div class="box">
+      <label for="text1">Text 1</label>
+      <textarea id="text1" placeholder="Enter or paste first text here..."></textarea>
     </div>
-    <div>
-      <input type="checkbox" id="collapseSpaces" checked>
-      <label for="collapseSpaces">Remove extra white space; extra tabs and spaces</label>
+    <div class="box">
+      <label for="text2">Text 2</label>
+      <textarea id="text2" placeholder="Enter or paste second text here..."></textarea>
     </div>
   </div>
-</div>
 
-<div class="btn-row">
-  <button class="compare-btn" onclick="runCompare()">Compare</button>
-  <button class="clear-btn" onclick="clearAll()">Clear</button>
-</div>
+  <!-- CASE NORMALIZATION ROW -->
+  <div class="case-row">
+    <span class="case-label">Case normalization:</span>
+    <div class="case-btn-group">
+      <button type="button" class="case-btn active" id="caseNone" onclick="setCase('none')">No Change</button>
+      <button type="button" class="case-btn" id="caseLower" onclick="setCase('lower')">Lowercase</button>
+      <button type="button" class="case-btn" id="caseUpper" onclick="setCase('upper')">Uppercase</button>
+    </div>
+    <input type="hidden" id="caseOption" value="none" />
+  </div>
 
-<h3>Differences (highlighted):</h3>
-<div class="diff-row">
-  <div class="diffbox" id="diff1"><i>No differences</i></div>
-  <div class="diffbox" id="diff2"><i>No differences</i></div>
-</div>
+  <div class="controls">
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="removeLineBreaks" checked /> Remove line breaks</label>
+      <label><input type="checkbox" id="collapseSpaces" checked /> Remove extra white space; extra tabs and spaces</label>
+    </div>
+    <button class="clear-btn" onclick="clearAll()">Clear</button>
+  </div>
 
-<!-- Official jsdiff from CDN -->
-<script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
-<script>
-  // Theme toggling logic
-  function toggleTheme() {
-    const isDark = document.getElementById('darkModeSwitch').checked;
-    document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    document.getElementById('themeName').innerText = isDark ? "Dark Mode" : "Light Mode";
-  }
-  window.addEventListener('DOMContentLoaded', function() {
-    const savedTheme = sessionStorage.getItem('compare-theme');
-    if(savedTheme === 'dark') {
-      document.getElementById('darkModeSwitch').checked = true;
-      document.body.setAttribute('data-theme','dark');
-      document.getElementById('themeName').innerText = "Dark Mode";
+  <div class="button-row">
+    <button class="compare-btn" onclick="runCompare()">Compare</button>
+  </div>
+
+  <h3>Differences (highlighted):</h3>
+  <div class="flex-row">
+    <div class="box">
+      <div class="diffbox" id="diff1"><i>No differences</i></div>
+    </div>
+    <div class="box">
+      <div class="diffbox" id="diff2"><i>No differences</i></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
+  <script>
+    function toggleTheme() {
+      const isDark = document.getElementById("darkToggle").checked;
+      document.body.setAttribute("data-theme", isDark ? "dark" : "light");
+      document.getElementById("themeName").innerText = isDark ? "Dark Mode" : "Regular Mode";
+      localStorage.setItem("compare-theme", isDark ? "dark" : "light");
     }
-  });
-  document.getElementById('darkModeSwitch').addEventListener('change', function() {
-    sessionStorage.setItem('compare-theme', this.checked ? 'dark' : 'light');
-  });
 
-  function setCase(val) {
-    document.getElementById('caseOption').value = val;
-    ['caseNone','caseLower','caseUpper'].forEach(id => 
-      document.getElementById(id).classList.remove('active'));
-    if(val==='none') document.getElementById('caseNone').classList.add('active');
-    if(val==='lower') document.getElementById('caseLower').classList.add('active');
-    if(val==='upper') document.getElementById('caseUpper').classList.add('active');
-  }
-
-  function escapeHTML(text) {
-    return text.replace(/[&<>"']/g, function(m) {
-      return ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      })[m];
-    });
-  }
-
-  function normalize(text, caseOpt, removeBreaks, collapseSpaces) {
-    if (removeBreaks) text = text.replace(/[\r\n]+/g, ' ');
-    if (collapseSpaces) text = text.replace(/\s+/g, ' ');
-    text = text.trim();
-    if (caseOpt === 'lower') return text.toLowerCase();
-    if (caseOpt === 'upper') return text.toUpperCase();
-    return text;
-  }
-
-  function runCompare() {
-    const t1 = document.getElementById('text1').value;
-    const t2 = document.getElementById('text2').value;
-    const caseOption = document.getElementById('caseOption').value;
-    const removeBreaks = document.getElementById('removeLineBreaks').checked;
-    const collapseSpaces = document.getElementById('collapseSpaces').checked;
-
-    const norm1 = normalize(t1, caseOption, removeBreaks, collapseSpaces);
-    const norm2 = normalize(t2, caseOption, removeBreaks, collapseSpaces);
-
-    // Use jsdiff for accurate word diff
-    const diff = window.Diff.diffWordsWithSpace(norm1, norm2);
-
-    let out1 = '', out2 = '';
-    diff.forEach(part => {
-      if (part.added) {
-        out2 += `<ins>${escapeHTML(part.value)}</ins>`;
-      } else if (part.removed) {
-        out1 += `<del>${escapeHTML(part.value)}</del>`;
-      } else {
-        out1 += escapeHTML(part.value);
-        out2 += escapeHTML(part.value);
+    window.addEventListener("DOMContentLoaded", function () {
+      const saved = localStorage.getItem("compare-theme");
+      if (saved === "dark") {
+        document.getElementById("darkToggle").checked = true;
+        toggleTheme();
       }
     });
 
-    document.getElementById('diff1').innerHTML = out1 || "<i>No differences</i>";
-    document.getElementById('diff2').innerHTML = out2 || "<i>No differences</i>";
-  }
+    // CASE BUTTONS LOGIC
+    function setCase(val) {
+      document.getElementById('caseOption').value = val;
+      ['caseNone', 'caseLower', 'caseUpper'].forEach(id => 
+        document.getElementById(id).classList.remove('active')
+      );
+      if (val === 'none') document.getElementById('caseNone').classList.add('active');
+      if (val === 'lower') document.getElementById('caseLower').classList.add('active');
+      if (val === 'upper') document.getElementById('caseUpper').classList.add('active');
+    }
 
-  function clearAll() {
-    document.getElementById('text1').value = "";
-    document.getElementById('text2').value = "";
-    document.getElementById('diff1').innerHTML = "<i>No differences</i>";
-    document.getElementById('diff2').innerHTML = "<i>No differences</i>";
-  }
-</script>
+    function escapeHTML(text) {
+      return text.replace(/[&<>"']/g, function (m) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
+      });
+    }
+
+    function normalize(text, caseOpt, removeBreaks, collapseSpaces) {
+      if (removeBreaks) text = text.replace(/[\r\n]+/g, " ");
+      if (collapseSpaces) text = text.replace(/\s+/g, " ");
+      text = text.trim();
+      if (caseOpt === "lower") return text.toLowerCase();
+      if (caseOpt === "upper") return text.toUpperCase();
+      return text;
+    }
+
+    function runCompare() {
+      const t1 = document.getElementById("text1").value;
+      const t2 = document.getElementById("text2").value;
+      const caseOption = document.getElementById("caseOption").value;
+      const removeBreaks = document.getElementById("removeLineBreaks").checked;
+      const collapseSpaces = document.getElementById("collapseSpaces").checked;
+
+      const norm1 = normalize(t1, caseOption, removeBreaks, collapseSpaces);
+      const norm2 = normalize(t2, caseOption, removeBreaks, collapseSpaces);
+
+      // Character-level diff
+      const diff = window.Diff.diffChars(norm1, norm2);
+
+      let out1 = "", out2 = "";
+      diff.forEach(part => {
+        if (part.added) {
+          out2 += `<ins>${escapeHTML(part.value)}</ins>`;
+        } else if (part.removed) {
+          out1 += `<del>${escapeHTML(part.value)}</del>`;
+        } else {
+          out1 += escapeHTML(part.value);
+          out2 += escapeHTML(part.value);
+        }
+      });
+
+      // If out1 == out2 and no <ins> or <del> tags, they are identical
+      if (
+        norm1 === norm2 &&
+        !/<ins>|<del>/.test(out1 + out2)
+      ) {
+        const identicalMsg = '<span class="identical-msg">Texts are Identical</span>';
+        document.getElementById("diff1").innerHTML = identicalMsg;
+        document.getElementById("diff2").innerHTML = identicalMsg;
+      } else {
+        document.getElementById("diff1").innerHTML = out1 || "<i>No differences</i>";
+        document.getElementById("diff2").innerHTML = out2 || "<i>No differences</i>";
+      }
+    }
+
+    function clearAll() {
+      document.getElementById("text1").value = "";
+      document.getElementById("text2").value = "";
+      document.getElementById("diff1").innerHTML = "<i>No differences</i>";
+      document.getElementById("diff2").innerHTML = "<i>No differences</i>";
+      setCase('none');
+    }
+  </script>
 </body>
 </html>
