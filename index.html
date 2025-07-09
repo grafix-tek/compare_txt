@@ -6,9 +6,9 @@
   <style>
     :root {
       --bg: #161c2d;
-      --fg: #f4f6fa;      /* UI, headings, labels: always light */
-      --box-bg: #D3D3D3;
-      --box-fg: #222;     /* Text in textareas/diffboxes: dark in regular mode */
+      --fg: #f4f6fa;
+      --box-bg: #fff;
+      --box-fg: #222;
       --box-border: #ccc;
       --success-bg: #21b67b;
       --success-fg: #fff;
@@ -22,7 +22,7 @@
       --bg: #161c2d;
       --fg: #f4f6fa;
       --box-bg: #222d44;
-      --box-fg: #f4f6fa;  /* Text in textareas/diffboxes: light in dark mode */
+      --box-fg: #f4f6fa;
       --box-border: #444f67;
       --success-bg: #21b67b;
       --success-fg: #fff;
@@ -40,12 +40,9 @@
       max-width: 90%;
       transition: background 0.2s, color 0.2s;
     }
-
-    /* Make sure all UI/headings/labels use --fg (light color always) */
     body, h1, h2, h3, h4, h5, h6, label, .toggle-label, .case-label {
       color: var(--fg);
     }
-
     .toggle-row {
       display: flex;
       align-items: center;
@@ -108,14 +105,12 @@
       font-weight: bold;
       margin-bottom: 5px;
     }
-
-    /* Use --box-fg for box text, --fg for everything else */
     textarea, .diffbox {
       width: 100%;
       min-height: 350px;
       border: 1px solid var(--box-border);
       background: var(--box-bg);
-      color: var(--box-fg);      /* THE KEY LINE! */
+      color: var(--box-fg);
       border-radius: 5px;
       padding: 10px;
       font-family: monospace;
@@ -232,12 +227,19 @@
       background-color: #999;
       color: white;
     }
+    /* Default highlight (for regular mode) */
     ins, del {
       background: #1976d2 !important;
       color: #fff !important;
       text-decoration: none;
       border-radius: 2px;
       padding: 1px 2px;
+    }
+    /* Different highlight for dark mode */
+    [data-theme="dark"] ins,
+    [data-theme="dark"] del {
+      background: #fff !important;  /* Lighter blue for dark mode 42a5f5 - highlight text color */
+      color: #000 !important;       /* Optional: darker text on light blue, or keep #fff - old 161c2d */
     }
     h2 {
       margin-bottom: 12px;
@@ -285,7 +287,7 @@
   <div class="controls">
     <div class="checkbox-group">
       <label><input type="checkbox" id="removeLineBreaks" checked /> Remove line breaks</label>
-      <label><input type="checkbox" id="collapseSpaces" checked /> Remove extra white space; extra tabs and spaces</label>
+      <label><input type="checkbox" id="collapseSpaces" checked /> Remove extra white space</label>
     </div>
     <button class="clear-btn" onclick="clearAll()">Clear</button>
   </div>
