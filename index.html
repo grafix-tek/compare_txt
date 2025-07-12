@@ -17,6 +17,8 @@
       --case-btn-bg-active: linear-gradient(90deg, #1976d2 10%, #42a5f5 90%);
       --case-btn-fg-active: #fff;
       --case-btn-fg: #f4f6fa;
+      --highlight-word: #1976d2;
+      --highlight-char: #c62828;
     }
     [data-theme="dark"] {
       --bg: #161c2d;
@@ -31,6 +33,8 @@
       --case-btn-bg-active: linear-gradient(90deg, #1359a0 10%, #1976d2 90%);
       --case-btn-fg-active: #fff;
       --case-btn-fg: #f4f6fa;
+      --highlight-word: #42a5f5;
+      --highlight-char: #ff5370;
     }
     body {
       background: var(--bg);
@@ -227,19 +231,12 @@
       background-color: #999;
       color: white;
     }
-    /* Default highlight (for regular mode) */
     ins, del {
-      background: #1976d2 !important;
+      background: var(--highlight-word) !important;
       color: #fff !important;
       text-decoration: none;
       border-radius: 2px;
       padding: 1px 2px;
-    }
-    /* Different highlight for dark mode */
-    [data-theme="dark"] ins,
-    [data-theme="dark"] del {
-      background: #fff !important;  /* Lighter blue for dark mode 42a5f5 - highlight text color */
-      color: #000 !important;       /* Optional: darker text on light blue, or keep #fff - old 161c2d */
     }
     h2 {
       margin-bottom: 12px;
@@ -248,20 +245,15 @@
       margin-top: 30px;
       margin-bottom: 12px;
     }
-
-	.footer {
-  text-align: right;
-  color: #263661;
-  opacity: 0.7;
-  font-size: 0.5em;
-  margin-top: 1500px;
-  padding: 20px 0 8px 0;
-  letter-spacing: 0em;
-  /*border-top: .5px solid var(--box-border);*/
-}
-
-	
-
+    .footer {
+      text-align: right;
+      color: #263661;
+      opacity: 0.7;
+      font-size: 0.5em;
+      margin-top: 1500px;
+      padding: 20px 0 8px 0;
+      letter-spacing: 0em;
+    }
   </style>
 </head>
 <body data-theme="light">
@@ -300,13 +292,15 @@
 
   <div class="controls">
     <div class="checkbox-group">
-      <label><input type="checkbox" id="removeLineBreaks" checked /> Remove line breaks</label>
-      <label><input type="checkbox" id="collapseSpaces" checked /> Remove extra white space</label>
+      <label>
+        <input type="checkbox" id="collapseSpaces" checked />
+        Remove extra white space
+      </label>
     </div>
     <button class="clear-btn" onclick="clearAll()">Clear</button>
   </div>
 
-  <div class="button-row">
+  <div class="button-row" style="display:none;">
     <button class="compare-btn" onclick="runCompare()">Compare</button>
   </div>
 
@@ -335,17 +329,32 @@
         document.getElementById("darkToggle").checked = true;
         toggleTheme();
       }
+
+      // Live compare on text input
+      document.getElementById("text1").addEventListener("input", runCompare);
+      document.getElementById("text2").addEventListener("input", runCompare);
+
+      // Live compare on whitespace or case change
+      document.getElementById("collapseSpaces").addEventListener("change", runCompare);
+
+      // Case button click triggers live compare (setCase already triggers runCompare)
+      document.querySelectorAll('.case-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          setCase(this.id.replace('case', '').toLowerCase());
+        });
+      });
     });
 
     // CASE BUTTONS LOGIC
     function setCase(val) {
       document.getElementById('caseOption').value = val;
-      ['caseNone', 'caseLower', 'caseUpper'].forEach(id => 
+      ['caseNone', 'caseLower', 'caseUpper'].forEach(id =>
         document.getElementById(id).classList.remove('active')
       );
       if (val === 'none') document.getElementById('caseNone').classList.add('active');
       if (val === 'lower') document.getElementById('caseLower').classList.add('active');
       if (val === 'upper') document.getElementById('caseUpper').classList.add('active');
+      runCompare();
     }
 
     function escapeHTML(text) {
@@ -354,8 +363,7 @@
       });
     }
 
-    function normalize(text, caseOpt, removeBreaks, collapseSpaces) {
-      if (removeBreaks) text = text.replace(/[\r\n]+/g, " ");
+    function normalize(text, caseOpt, collapseSpaces) {
       if (collapseSpaces) text = text.replace(/\s+/g, " ");
       text = text.trim();
       if (caseOpt === "lower") return text.toLowerCase();
@@ -367,11 +375,17 @@
       const t1 = document.getElementById("text1").value;
       const t2 = document.getElementById("text2").value;
       const caseOption = document.getElementById("caseOption").value;
-      const removeBreaks = document.getElementById("removeLineBreaks").checked;
       const collapseSpaces = document.getElementById("collapseSpaces").checked;
 
-      const norm1 = normalize(t1, caseOption, removeBreaks, collapseSpaces);
-      const norm2 = normalize(t2, caseOption, removeBreaks, collapseSpaces);
+      // If both boxes are empty or just placeholders, show no differences
+      if (!t1 && !t2) {
+        document.getElementById("diff1").innerHTML = "<i>No differences</i>";
+        document.getElementById("diff2").innerHTML = "<i>No differences</i>";
+        return;
+      }
+
+      const norm1 = normalize(t1, caseOption, collapseSpaces);
+      const norm2 = normalize(t2, caseOption, collapseSpaces);
 
       // Character-level diff
       const diff = window.Diff.diffChars(norm1, norm2);
@@ -411,11 +425,8 @@
     }
   </script>
 
-<footer class="footer">
-Copyright &copy; 2025 Chris Hjelmeir. Free for personal and company use. All rights reserved.
-</footer>
-
-
-
+  <footer class="footer">
+    Copyright &copy; 2025 Chris Hjelmeir. Free for personal and company use. All rights reserved.
+  </footer>
 </body>
 </html>
