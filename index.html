@@ -231,13 +231,19 @@
       background-color: #999;
       color: white;
     }
-    ins, del {
-      background: var(--highlight-word) !important;
-      color: #fff !important;
-      text-decoration: none;
-      border-radius: 2px;
-      padding: 1px 2px;
-    }
+	ins, del {
+	  background: var(--highlight-word) !important;
+	  color: #fff !important;
+	  text-decoration: none;
+	  border-radius: 2px;
+	  padding: 1px 2px;
+	}
+	/* Make highlights white background and black text in dark mode */
+	[data-theme="dark"] ins,
+	[data-theme="dark"] del {
+  		background: #fff !important;
+  		color: #000 !important;
+	}
     h2 {
       margin-bottom: 12px;
     }
