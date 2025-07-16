@@ -251,15 +251,27 @@
       margin-top: 30px;
       margin-bottom: 12px;
     }
-    .footer {
-      text-align: right;
-      color: #263661;
-      opacity: 0.7;
-      font-size: 0.5em;
-      margin-top: 1500px;
-      padding: 20px 0 8px 0;
-      letter-spacing: 0em;
-    }
+
+	.footer {
+	  position: fixed;
+	  left: 0;
+	  bottom: 0;
+	  width: 100%;
+	  background-color: #222d44;
+	  /* No more text-align or padding here, only on .footer-container */
+	  z-index: 1000;
+	}
+	.footer-container {
+	  max-width: 90%;
+	  margin: 0 auto;
+	  text-align: right;
+	  color: #fff;
+	  opacity: .1;
+	  font-size: .7em;
+	  padding: 5px 0 5px 0;
+	  letter-spacing: 0em;
+	}
+
   </style>
 </head>
 <body data-theme="light">
@@ -431,8 +443,14 @@
     }
   </script>
 
-  <footer class="footer">
-    Copyright &copy; 2025 Pulsecraft • Free for personal and company use. All rights reserved.
-  </footer>
+
+	<footer class="footer">
+	  <div class="footer-container">
+	    Copyright &copy; 2025 Pulsecraft • Free for personal and company use. All rights reserved.
+	  </div>
+	</footer>
+
+
+
 </body>
 </html>
