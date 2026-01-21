@@ -19,6 +19,9 @@
       --case-btn-fg: #f4f6fa;
       --highlight-word: #1976d2;
       --highlight-char: #c62828;
+
+      /* Shared font size for all text boxes */
+      --text-size: 1em;
     }
     [data-theme="dark"] {
       --bg: #161c2d;
@@ -118,7 +121,10 @@
       border-radius: 5px;
       padding: 10px;
       font-family: monospace;
-      font-size: 1em;
+
+      /* uses shared font size */
+      font-size: var(--text-size);
+
       resize: vertical;
       white-space: pre-wrap;
       overflow-wrap: break-word;
@@ -172,6 +178,7 @@
     .case-btn-group {
       display: flex;
       gap: 15px;
+      align-items: center;
     }
     .case-btn {
       padding: 10px 32px;
@@ -192,6 +199,19 @@
       box-shadow: 0 2px 12px 0 rgba(30,80,200,0.14);
       font-weight: bold;
     }
+
+    /* Font +/- buttons and readout */
+    .font-btn {
+      padding: 10px 18px;
+      min-width: 64px;
+      text-align: center;
+    }
+    .font-readout {
+      opacity: 0.9;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
     .button-row {
       display: flex;
       align-items: center;
@@ -231,19 +251,18 @@
       background-color: #999;
       color: white;
     }
-	ins, del {
-	  background: var(--highlight-word) !important;
-	  color: #fff !important;
-	  text-decoration: none;
-	  border-radius: 2px;
-	  padding: 1px 2px;
-	}
-	/* Make highlights white background and black text in dark mode */
-	[data-theme="dark"] ins,
-	[data-theme="dark"] del {
-  		background: #fff !important;
-  		color: #000 !important;
-	}
+    ins, del {
+      background: var(--highlight-word) !important;
+      color: #fff !important;
+      text-decoration: none;
+      border-radius: 2px;
+      padding: 1px 2px;
+    }
+    [data-theme="dark"] ins,
+    [data-theme="dark"] del {
+      background: #fff !important;
+      color: #000 !important;
+    }
     h2 {
       margin-bottom: 12px;
     }
@@ -252,28 +271,27 @@
       margin-bottom: 12px;
     }
 
-	.footer {
-	  position: fixed;
-	  left: 0;
-	  bottom: 0;
-	  width: 100%;
-	  background-color: #222d44;
-	  /* No more text-align or padding here, only on .footer-container */
-	  z-index: 1000;
-	}
-	.footer-container {
-	  max-width: 90%;
-	  margin: 0 auto;
-	  text-align: right;
-	  color: #fff;
-	  opacity: .5;
-	  font-size: .7em;
-	  padding: 5px 0 5px 0;
-	  letter-spacing: 0em;
-	}
-
+    .footer {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      background-color: #222d44;
+      z-index: 1000;
+    }
+    .footer-container {
+      max-width: 90%;
+      margin: 0 auto;
+      text-align: right;
+      color: #fff;
+      opacity: .5;
+      font-size: .7em;
+      padding: 5px 0 5px 0;
+      letter-spacing: 0em;
+    }
   </style>
 </head>
+
 <body data-theme="light">
   <div class="toggle-row">
     <span class="toggle-label">Theme:</span>
@@ -297,7 +315,7 @@
     </div>
   </div>
 
-  <!-- CASE NORMALIZATION ROW -->
+  <!-- CASE + FONT SIZE (single row) -->
   <div class="case-row">
     <span class="case-label">Case normalization:</span>
     <div class="case-btn-group">
@@ -306,6 +324,14 @@
       <button type="button" class="case-btn" id="caseUpper" onclick="setCase('upper')">Uppercase</button>
     </div>
     <input type="hidden" id="caseOption" value="none" />
+
+    <span class="case-label" style="margin-left: 22px;">Font size:</span>
+    <div class="case-btn-group">
+      <button type="button" class="case-btn font-btn" onclick="adjustFont(-1)">–</button>
+      <button type="button" class="case-btn font-btn" onclick="adjustFont(1)">+</button>
+      <span class="font-readout" id="fontReadout">100%</span>
+    </div>
+    <input type="hidden" id="fontScale" value="1" />
   </div>
 
   <div class="controls">
@@ -341,26 +367,49 @@
       localStorage.setItem("compare-theme", isDark ? "dark" : "light");
     }
 
+    // Font scaling (shared across textarea + diff boxes)
+    function applyFontScale(scale) {
+      document.getElementById('fontScale').value = scale.toFixed(2);
+      document.documentElement.style.setProperty('--text-size', scale + 'em');
+      document.getElementById('fontReadout').innerText = Math.round(scale * 100) + '%';
+      localStorage.setItem('compare-fontScale', scale.toFixed(2));
+    }
+
+    function adjustFont(direction) {
+      const step = 0.10;  // 10% per click
+      const min = 0.60;   // 60%
+      const max = 2.00;   // 200%
+      let scale = parseFloat(document.getElementById('fontScale').value || '1');
+
+      scale = scale + (direction * step);
+      if (scale < min) scale = min;
+      if (scale > max) scale = max;
+
+      scale = Math.round(scale * 100) / 100;
+      applyFontScale(scale);
+    }
+
     window.addEventListener("DOMContentLoaded", function () {
-      const saved = localStorage.getItem("compare-theme");
-      if (saved === "dark") {
+      const savedTheme = localStorage.getItem("compare-theme");
+      if (savedTheme === "dark") {
         document.getElementById("darkToggle").checked = true;
         toggleTheme();
+      }
+
+      // Restore font scale if present
+      const savedScale = localStorage.getItem('compare-fontScale');
+      if (savedScale) {
+        applyFontScale(parseFloat(savedScale));
+      } else {
+        applyFontScale(1.0);
       }
 
       // Live compare on text input
       document.getElementById("text1").addEventListener("input", runCompare);
       document.getElementById("text2").addEventListener("input", runCompare);
 
-      // Live compare on whitespace or case change
+      // Live compare on whitespace change
       document.getElementById("collapseSpaces").addEventListener("change", runCompare);
-
-      // Case button click triggers live compare (setCase already triggers runCompare)
-      document.querySelectorAll('.case-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-          setCase(this.id.replace('case', '').toLowerCase());
-        });
-      });
     });
 
     // CASE BUTTONS LOGIC
@@ -395,7 +444,6 @@
       const caseOption = document.getElementById("caseOption").value;
       const collapseSpaces = document.getElementById("collapseSpaces").checked;
 
-      // If both boxes are empty or just placeholders, show no differences
       if (!t1 && !t2) {
         document.getElementById("diff1").innerHTML = "<i>No differences</i>";
         document.getElementById("diff2").innerHTML = "<i>No differences</i>";
@@ -405,7 +453,6 @@
       const norm1 = normalize(t1, caseOption, collapseSpaces);
       const norm2 = normalize(t2, caseOption, collapseSpaces);
 
-      // Character-level diff
       const diff = window.Diff.diffChars(norm1, norm2);
 
       let out1 = "", out2 = "";
@@ -420,7 +467,6 @@
         }
       });
 
-      // If out1 == out2 and no <ins> or <del> tags, they are identical
       if (
         norm1 === norm2 &&
         !/<ins>|<del>/.test(out1 + out2)
@@ -443,14 +489,10 @@
     }
   </script>
 
-
-	<footer class="footer">
-	  <div class="footer-container">
-	    Copyright &copy; 2025 Pulsecraft • Free for personal and company use. All rights reserved. No warranty is expressed or implied. Use at your own risk. Not responsible or liable for any errors, data loss, or damages of any kind.
-	  </div>
-	</footer>
-
-
-
+  <footer class="footer">
+    <div class="footer-container">
+      Copyright &copy; 2025 Pulsecraft • Free for personal and company use. All rights reserved. No warranty is expressed or implied. Use at your own risk. Not responsible or liable for any errors, data loss, or damages of any kind.
+    </div>
+  </footer>
 </body>
 </html>
