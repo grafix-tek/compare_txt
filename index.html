@@ -50,11 +50,31 @@
     body, h1, h2, h3, h4, h5, h6, label, .toggle-label, .case-label {
       color: var(--fg);
     }
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      margin-bottom: 20px;
+
+    /* Title inline with Theme toggle */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom: 12px;
     }
+    .app-title{
+      font-weight: 800;
+      font-size: 1.25em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .topbar-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap: wrap;
+    }
+    .theme-name{
+      margin-left: 0;
+    }
+
     .toggle-label {
       margin-right: 10px;
       font-weight: bold;
@@ -96,6 +116,7 @@
     input:checked + .slider:before {
       transform: translateX(26px);
     }
+
     .flex-row {
       display: flex;
       gap: 20px;
@@ -143,9 +164,10 @@
       border-radius: 5px;
       font-size: 1.2em;
     }
+
     .controls {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start; /* since Reset moved up */
       align-items: center;
       flex-wrap: wrap;
       margin-bottom: 10px;
@@ -163,12 +185,14 @@
       gap: 5px;
       font-weight: normal;
     }
+
     .case-row {
       display: flex;
       align-items: center;
       margin-bottom: 8px;
       gap: 15px;
       flex-wrap: wrap;
+      width: 100%;
     }
     .case-row .case-label {
       font-weight: bold;
@@ -212,6 +236,22 @@
       white-space: nowrap;
     }
 
+    /* NEW: Reset button sits at far right of the case-row */
+    .reset-btn{
+      margin-left: auto; /* pushes it to the right */
+      background-color: #ccc !important;
+      color: #111 !important;
+      border: none !important;
+      padding: 10px 20px !important;
+      font-size: 1em !important;
+      border-radius: 8px !important;
+      font-weight: bold !important;
+    }
+    .reset-btn:hover{
+      background-color: #999 !important;
+      color: #fff !important;
+    }
+
     .button-row {
       display: flex;
       align-items: center;
@@ -244,13 +284,7 @@
       box-shadow: 0 2px 12px 0 rgba(30,80,200,0.17);
       transform: translateY(-2px) scale(1.04);
     }
-    .clear-btn {
-      background-color: #ccc;
-    }
-    .clear-btn:hover {
-      background-color: #999;
-      color: white;
-    }
+
     ins, del {
       background: var(--highlight-word) !important;
       color: #fff !important;
@@ -262,9 +296,6 @@
     [data-theme="dark"] del {
       background: #fff !important;
       color: #000 !important;
-    }
-    h2 {
-      margin-bottom: 12px;
     }
     h3 {
       margin-top: 30px;
@@ -293,16 +324,21 @@
 </head>
 
 <body data-theme="light">
-  <div class="toggle-row">
-    <span class="toggle-label">Theme:</span>
-    <label class="toggle-switch">
-      <input type="checkbox" id="darkToggle" onchange="toggleTheme()" />
-      <span class="slider"></span>
-    </label>
-    <span style="margin-left:10px;" id="themeName">Regular Mode</span>
-  </div>
+  <!-- Title inline with Theme toggle -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="app-title">Text Compare Tool</span>
+    </div>
 
-  <h2>Text Compare Tool</h2>
+    <div class="topbar-right">
+      <span class="toggle-label">Theme:</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="darkToggle" onchange="toggleTheme()" />
+        <span class="slider"></span>
+      </label>
+      <span id="themeName" class="theme-name">Regular Mode</span>
+    </div>
+  </div>
 
   <div class="flex-row">
     <div class="box">
@@ -315,7 +351,7 @@
     </div>
   </div>
 
-  <!-- CASE + FONT SIZE (single row) -->
+  <!-- CASE + FONT SIZE + RESET (single row) -->
   <div class="case-row">
     <span class="case-label">Case normalization:</span>
     <div class="case-btn-group">
@@ -332,6 +368,9 @@
       <span class="font-readout" id="fontReadout">100%</span>
     </div>
     <input type="hidden" id="fontScale" value="1" />
+
+    <!-- NEW: Reset button, right-justified within this row -->
+    <button type="button" class="reset-btn" onclick="clearAll()">Reset</button>
   </div>
 
   <div class="controls">
@@ -341,7 +380,6 @@
         Remove extra white space
       </label>
     </div>
-    <button class="clear-btn" onclick="clearAll()">Clear</button>
   </div>
 
   <div class="button-row" style="display:none;">
